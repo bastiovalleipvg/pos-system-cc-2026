@@ -28,19 +28,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ─── HEALTH CHECK ────────────────────────────────────────────────────────────
-// TODO: Implementar endpoint de health check para:
-//   - Load Balancers (ALB, NGINX, etc.)
-//   - Orquestadores de contenedores (ECS, Kubernetes)
-//   - Servicios de monitoreo
-//
-// app.get('/health', async (req, res) => {
-//   try {
-//     await pool.query('SELECT 1');
-//     res.json({ status: 'ok', db: 'ok', timestamp: new Date() });
-//   } catch {
-//     res.status(503).json({ status: 'error', db: 'unreachable' });
-//   }
-// });
+// Ruta pública y ligera — sin autenticación ni middleware pesado.
+// Usada por Azure App Service / Container Apps para liveness/readiness probes.
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // ─── RUTAS ───────────────────────────────────────────────────────────────────
 app.use('/api/auth',       authRoutes);
