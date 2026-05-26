@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const logger   = require('./logger');
 
 // ⚠️  TODO: PROBLEMA DE SEGURIDAD - Credenciales hardcodeadas
 // En producción, TODAS las credenciales deben provenir de variables de entorno
@@ -25,10 +26,12 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-// TODO: Implementar lógica de reconexión automática (retry) para alta disponibilidad
+// Registrar el error en el sistema de logging central (Winston + Application Insights)
 pool.on('error', (err) => {
-  console.error('Error inesperado en el pool de conexiones:', err.message);
-  // TODO: Enviar alerta a sistema de monitoreo (CloudWatch, Datadog, etc.)
+  logger.error('Error inesperado en el pool de conexiones PostgreSQL', {
+    message: err.message,
+    stack:   err.stack,
+  });
 });
 
 module.exports = pool;
