@@ -1,17 +1,15 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import { formatCLP } from '@/lib/utils';
 
 export default function SalesPage() {
   const [sales, setSales]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) setIsAdmin(JSON.parse(stored).rol === 'admin');
-  }, []);
+  const { user } = useAuth();
+  
+  const isAdmin = user?.rol === 'admin';
 
   const load = () => {
     setLoading(true);

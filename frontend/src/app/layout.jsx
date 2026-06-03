@@ -5,10 +5,14 @@ export const metadata = {
   description: 'Punto de Venta para Pymes Chilenas',
 };
 
+import { AuthProvider } from '@/context/AuthContext';
+
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

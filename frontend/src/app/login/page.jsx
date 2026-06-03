@@ -1,10 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,12 +13,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/login', form);
-      // TODO: Usar cookies HttpOnly en producción en lugar de localStorage
-      // localStorage es vulnerable a XSS
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      router.push('/dashboard');
+      await login(form);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión.');
     } finally {

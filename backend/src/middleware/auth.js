@@ -14,8 +14,18 @@ const jwt = require('jsonwebtoken');
  * 5. Eliminar el llamado directo a next() al final de esta función
  */
 const authMiddleware = (req, res, next) => {
+  let token = null;
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.headers.cookie) {
+    const cookies = req.headers.cookie.split(';').map(c => c.trim());
+    const tokenCookie = cookies.find(c => c.startsWith('token='));
+    if (tokenCookie) {
+      token = tokenCookie.split('=')[1];
+    }
+  }
 
   if (!token) {
     return res.status(401).json({ error: 'Acceso denegado. Token requerido.' });
