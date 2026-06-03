@@ -54,12 +54,11 @@ INSERT INTO clientes (rut, nombre, email, telefono, direccion) VALUES
 --   node -e "const b=require('bcryptjs'); b.hash('admin123',10).then(h=>console.log(h))"
 -- Luego reemplaza PASSWORD_HASH_AQUI con el hash generado.
 -- ============================================================
--- INSERT INTO usuarios (nombre, email, password_hash, rol_id) VALUES
---   ('Administrador', 'admin@pos.cl', 'PASSWORD_HASH_AQUI', 1);
+INSERT INTO usuarios (nombre, email, password_hash, rol_id) VALUES
+  ('Administrador', 'admin@pos.cl', '$2a$10$sGU1RYq5g6YmJEy0v.qqS.QpMZjlU.Ee1GFHS8r2TRDQY53Y2NRPG', 1);
 
--- Usuario cajero de ejemplo (sin hash - requiere generación)
--- INSERT INTO usuarios (nombre, email, password_hash, rol_id) VALUES
---   ('Cajero Demo', 'cajero@pos.cl', 'PASSWORD_HASH_AQUI', 2);
+INSERT INTO usuarios (nombre, email, password_hash, rol_id) VALUES
+  ('Cajero Demo', 'cajero@pos.cl', '$2a$10$XEMxr9rCPZ4LkyKNg0IkUuBkiWOWFvkvHEC27PlaozzXpROB7PgCy', 2);
 
 -- ============================================================
 -- VENTAS DE EJEMPLO

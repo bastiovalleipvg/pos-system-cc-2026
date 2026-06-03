@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:16
+    container_name: postgres_local
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: pos_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pos_backend
+    restart: always
+    environment:
+      - PORT=3001
+      - NODE_ENV=development
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_NAME=pos_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=super_secret_jwt_for_docker
+      - JWT_EXPIRES_IN=8h
+      - FRONTEND_URL=http://localhost:3000
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - postgres-db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pos_frontend
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
