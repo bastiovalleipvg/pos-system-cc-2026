@@ -14,15 +14,26 @@ if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-const app    = require('./app');
-const logger = require('./config/logger');
+const loadSecrets = require('./config/vault');
 
-const PORT = process.env.PORT || 3001;
+async function startServer() {
+  await loadSecrets();
 
-app.listen(PORT, () => {
-  logger.info(`Servidor POS iniciado`, {
-    port:    PORT,
-    env:     process.env.NODE_ENV || 'development',
-    appInsights: !!process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+  const app    = require('./app');
+  const logger = require('./config/logger');
+
+  const PORT = process.env.PORT || 3001;
+
+  app.listen(PORT, () => {
+    logger.info(`Servidor POS iniciado`, {
+      port:    PORT,
+      env:     process.env.NODE_ENV || 'development',
+      appInsights: !!process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+    });
   });
+}
+
+startServer().catch(err => {
+  console.error("Error fatal al iniciar el servidor:", err);
+  process.exit(1);
 });
