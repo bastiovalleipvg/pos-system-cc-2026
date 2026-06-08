@@ -28,7 +28,6 @@ export default function Sidebar() {
   const visibleNav = NAV.filter(item => !item.adminOnly || isAdmin);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/login');
   };

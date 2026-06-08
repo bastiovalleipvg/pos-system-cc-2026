@@ -207,7 +207,7 @@ const evalReport = async (req, res) => {
     loggingVars.length > 0, 5,
     loggingVars.length > 0
       ? `Variables activas: ${loggingVars.join(', ')}`
-      : 'Ninguna variable de logging detectada (solo console.log)');
+      : 'Ninguna variable de logging externa detectada (solo logger base)');
 
   // 5.2 Secrets management
   const secretsMgmt = ['AWS_SECRET_ARN', 'AZURE_KEY_VAULT_URL', 'GCP_SECRET_PROJECT',

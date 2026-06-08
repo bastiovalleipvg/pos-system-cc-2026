@@ -17,6 +17,7 @@ const evalRoutes     = require('./routes/eval');
 
 const logger     = require('./config/logger');
 const { httpLogger } = require('./middleware/httpLogger');
+const { globalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.get("/health", (req, res) => {
 });
 
 // ─── RUTAS ───────────────────────────────────────────────────────────────────
+app.use("/api/", globalLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);

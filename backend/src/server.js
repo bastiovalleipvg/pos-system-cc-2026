@@ -15,12 +15,12 @@ if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const loadSecrets = require('./config/vault');
+const logger = require('./config/logger');
 
 async function startServer() {
   await loadSecrets();
 
   const app = require('./app');
-  const logger = require('./config/logger');
 
   const PORT = process.env.PORT || 3001;
 
@@ -34,6 +34,6 @@ async function startServer() {
 }
 
 startServer().catch(err => {
-  console.error("Error fatal al iniciar el servidor:", err);
+  logger.error("Error fatal al iniciar el servidor:", { error: err.message, stack: err.stack });
   process.exit(1);
 });

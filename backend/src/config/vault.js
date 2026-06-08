@@ -2,6 +2,7 @@
 
 const { SecretClient } = require('@azure/keyvault-secrets');
 const { DefaultAzureCredential } = require('@azure/identity');
+const logger = require('./logger');
 
 /**
  * Mapa de nombres de secretos en Azure Key Vault → variables de entorno Node.js.
@@ -18,17 +19,10 @@ const SECRET_MAP = {
  * Carga todos los secretos desde Azure Key Vault e inyecta sus valores
  * en process.env antes de que el servidor arranque.
  *
- * - En desarrollo (NODE_ENV !== 'production') simplemente retorna;
- *   los valores ya deben estar en el archivo .env local.
- * - En producción, cualquier error es FATAL: lanza una excepción que
- *   detiene el proceso. Cero fallbacks, cero valores por defecto.
+ * En producción, cualquier error es FATAL: lanza una excepción que
+ * detiene el proceso. Cero fallbacks, cero valores por defecto.
  */
 async function loadSecrets() {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[Vault] Entorno de desarrollo — usando variables de .env local.');
-    return;
-  }
-
   const vaultName = process.env.KEY_VAULT_NAME;
   if (!vaultName) {
     throw new Error(
@@ -38,7 +32,7 @@ async function loadSecrets() {
   }
 
   const vaultUrl = `https://${vaultName}.vault.azure.net`;
-  console.log(`[Vault] Conectando a Azure Key Vault: ${vaultUrl}`);
+  logger.info(`[Vault] Conectando a Azure Key Vault: ${vaultUrl}`);
 
   let credential;
   try {
@@ -82,7 +76,7 @@ async function loadSecrets() {
     process.env[envKey] = value;
   });
 
-  console.log(
+  logger.info(
     `[Vault] ✅ ${secretNames.length} secretos cargados exitosamente: ` +
     `${secretNames.join(', ')}`
   );

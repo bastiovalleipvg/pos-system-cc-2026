@@ -1,5 +1,15 @@
 const rateLimit = require("express-rate-limit");
 
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 200, // Máximo 200 peticiones por IP para no bloquear uso normal del POS
+  message: {
+    error: "Demasiadas peticiones a la API, por favor intente de nuevo después de 15 minutos",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Limitador específico para el endpoint de login.
 // NO se aplica globalmente para no afectar operaciones legítimas de alta frecuencia
 // (ej: cajero escaneando productos rápidamente).
@@ -14,17 +24,4 @@ const loginLimiter = rateLimit({
   legacyHeaders: false, // Deshabilita cabeceras `X-RateLimit-*` (deprecadas)
 });
 
-module.exports = { loginLimiter };
-
-/* 
-Para probar:
-# Health check — debe responder inmediatamente
-curl http://localhost:3001/health
-# → {"status":"ok","timestamp":"..."}
-
-# Enviar 6 intentos de login seguidos — el 6to debe dar 429
-curl -X POST http://localhost:3001/api/auth/login -H "Content-Type: application/json" -d "{}"
-
-El endpoint /api/products, /api/sales, etc. no están limitados, 
-por lo que el cajero puede escanear sin restricciones.
-*/
+module.exports = { loginLimiter, globalLimiter };
