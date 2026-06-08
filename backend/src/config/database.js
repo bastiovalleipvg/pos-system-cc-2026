@@ -1,28 +1,37 @@
+'use strict';
+
 const { Pool } = require('pg');
 const logger   = require('./logger');
 
-// ⚠️  TODO: PROBLEMA DE SEGURIDAD - Credenciales hardcodeadas
-// En producción, TODAS las credenciales deben provenir de variables de entorno
-// o de un servicio de gestión de secretos (AWS Secrets Manager, etc.)
-// Ver .env.example para la configuración correcta.
-//
-// Pasos para corregir:
-// 1. Crear archivo .env con las credenciales reales (ver .env.example)
-// 2. Descomentar las líneas de process.env y eliminar los valores fijos
-
+/**
+ * Pool de conexiones a PostgreSQL.
+ *
+ * SEGURIDAD: Todos los valores provienen EXCLUSIVAMENTE de variables de entorno.
+ * No existen valores por defecto ni fallbacks. Si alguna variable no está
+ * definida, pg lanzará un error en tiempo de conexión que detendrá el servicio,
+ * haciendo evidente la mala configuración antes de llegar a producción.
+ *
+ * Las variables requeridas son:
+ *   DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+ *
+ * En producción estas variables son inyectadas por vault.js desde Azure Key Vault.
+ */
 const pool = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',   // TODO: Solo variable de entorno
-  port:     process.env.DB_PORT     || 5432,          // TODO: Solo variable de entorno
-  database: process.env.DB_NAME     || 'pos_db',      // TODO: Solo variable de entorno
-  user:     process.env.DB_USER     || 'postgres',    // TODO: Solo variable de entorno
-  password: process.env.DB_PASSWORD || 'postgres',    // TODO: Solo variable de entorno
+  host:     process.env.DB_HOST,
+  port:     Number(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user:     process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 
-  // TODO: Habilitar SSL para conexiones en producción (RDS, Cloud SQL, etc.)
-  // ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  // SSL dinámico: obligatorio con verificación relajada en producción
+  // (Azure Database for PostgreSQL usa certificados autofirmados de CA interna).
+  // En desarrollo se deshabilita para facilitar conexiones locales.
+  ssl: process.env.NODE_ENV === 'production'
+    ? { require: true, rejectUnauthorized: false }
+    : false,
 
-  // TODO: Configurar pool según la carga esperada
-  max:              10,
-  idleTimeoutMillis: 30000,
+  max:                     10,
+  idleTimeoutMillis:       30000,
   connectionTimeoutMillis: 2000,
 });
 

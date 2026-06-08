@@ -31,8 +31,13 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ error: 'Acceso denegado. Token requerido.' });
   }
 
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error('[Auth] FATAL: JWT_SECRET no está definido en las variables de entorno.');
+  }
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secreto_temporal_cambiar');
+    const decoded = jwt.verify(token, jwtSecret);
     req.user = decoded;
     next();
   } catch (err) {
