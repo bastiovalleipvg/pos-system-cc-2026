@@ -25,14 +25,13 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=development
-      - DB_HOST=postgres-db
-      - DB_PORT=5432
-      - DB_NAME=pos_db
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - JWT_SECRET=super_secret_jwt_for_docker
-      - JWT_EXPIRES_IN=8h
       - FRONTEND_URL=http://localhost:3000
+      # --- LO NUEVO DE AZURE (Seguro) ---
+      - KEY_VAULT_NAME=${KEY_VAULT_NAME}
+      - AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
     ports:
       - "3001:3001"
     volumes:
