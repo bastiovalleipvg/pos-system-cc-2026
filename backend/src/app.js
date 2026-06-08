@@ -60,9 +60,8 @@ app.use(express.urlencoded({ extended: true }));
 // Registra cada request (método, URL, status, duración, IP) con Winston.
 app.use(httpLogger);
 
-// ─── ARCHIVOS ESTÁTICOS (imágenes) ─────────────────────────────────────────────────────
-// TODO: Eliminar cuando se migre a almacenamiento en la nube (S3, GCS, etc.)
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+// ─── ARCHIVOS ESTÁTICOS ────────────────────────────────────────────────────────
+// Eliminado: El backend ya no sirve imágenes locales, todas se obtienen directo de Azure Blob Storage
 
 // ─── HEALTH CHECK ────────────────────────────────────────────────────────────
 // Ruta pública y ligera — sin autenticación ni middleware pesado.

@@ -51,7 +51,7 @@ const create = async (req, res) => {
   try {
     const { nombre, descripcion, precio, stock, categoria_id } = req.body;
     // TODO: Validar que precio >= 0, stock >= 0, nombre no vacío, categoria_id exista
-    const imagen_url = req.file ? `/uploads/${req.file.filename}` : null;
+    const imagen_url = req.file ? req.file.url : null;
 
     const result = await pool.query(
       `INSERT INTO productos (nombre, descripcion, precio, stock, categoria_id, imagen_url)
@@ -68,7 +68,7 @@ const update = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion, precio, stock, categoria_id, activo } = req.body;
-    const imagen_url = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const imagen_url = req.file ? req.file.url : undefined;
 
     const fields = [];
     const values = [];
