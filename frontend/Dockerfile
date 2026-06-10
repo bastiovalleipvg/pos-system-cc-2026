@@ -9,6 +9,12 @@ RUN npm install
 
 COPY . .
 
+# 1. Declarar que recibiremos un argumento durante el build
+ARG NEXT_PUBLIC_API_URL
+
+# 2. Convertir ese argumento en variable de entorno para que Next.js lo lea al compilar
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Compila la aplicación optimizada
 RUN npm run build
 

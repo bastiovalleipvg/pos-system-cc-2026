@@ -7,8 +7,9 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/:path*`,
+        source: "/api/:path*",
+        destination:
+          "https://app-backend-core.ambitiouscliff-28478ba7.canadacentral.azurecontainerapps.io/api/:path*",
       },
     ];
   },
