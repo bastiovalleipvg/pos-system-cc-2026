@@ -9,6 +9,8 @@ const redisClient = new Redis({
   password: process.env.REDIS_PASSWORD,
   // Azure Redis requiere TLS habilitado en producción
   tls: process.env.NODE_ENV === 'production' ? {} : undefined,
+  enableOfflineQueue: false, // Evita que la app se cuelgue si Redis falla
+  commandTimeout: 2000,      // Timeout rápido para fallback a DB
 });
 
 redisClient.on('connect', () => logger.info('[Redis] Conectado a Azure Cache for Redis.'));
