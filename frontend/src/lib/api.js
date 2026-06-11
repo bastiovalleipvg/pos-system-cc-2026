@@ -1,18 +1,24 @@
 import axios from 'axios';
 
-// TODO: En producción, esta URL debe apuntar al Load Balancer / API Gateway del backend
-// No hardcodear URLs. Usar únicamente variables de entorno.
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
+/**
+ * Cliente HTTP centralizado — Axios.
+ *
+ * En producción, todas las llamadas usan rutas relativas (/api/...).
+ * Next.js las redirige al backend vía proxy rewrite (next.config.js),
+ * manteniendo las cookies same-origin y el tráfico dentro de la red privada de Azure.
+ *
+ * En desarrollo, el mismo proxy redirige a http://localhost:3001.
+ */
 const api = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: '/api',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true, // Habilitar envío de cookies HttpOnly
+  withCredentials: true, // Envío automático de cookies HttpOnly
 });
 
 api.interceptors.request.use((config) => {
-  // El token ahora se envía automáticamente mediante cookies (withCredentials: true)
+  // El token se envía automáticamente mediante cookies (withCredentials: true).
+  // No se necesita header Authorization manual.
   return config;
 });
 
@@ -20,7 +26,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      window.location.href = '/login';
+      // Evitar bucle infinito: no redirigir si ya estamos en la página de login
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

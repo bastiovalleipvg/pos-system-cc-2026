@@ -18,7 +18,13 @@ const loadSecrets = require('./config/vault');
 const logger = require('./config/logger');
 
 async function startServer() {
-  await loadSecrets();
+  // En producción, los secretos se cargan desde Azure Key Vault (Managed Identity).
+  // En desarrollo, vienen de .env vía dotenv (cargado en app.js).
+  if (process.env.KEY_VAULT_NAME) {
+    await loadSecrets();
+  } else {
+    logger.info('[Vault] KEY_VAULT_NAME no definido — usando variables de entorno locales (.env)');
+  }
 
   const app = require('./app');
 

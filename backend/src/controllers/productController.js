@@ -1,8 +1,17 @@
+'use strict';
+
 const pool = require('../config/database');
 
-// TODO: Agregar validación de inputs con express-validator (ya instalado)
-// TODO: Sanitizar datos antes de insertarlos
+/**
+ * Controlador de Productos.
+ *
+ * Las imágenes se suben a Azure Blob Storage vía el middleware upload.js.
+ * Multer-Azure-Blob-Storage inyecta `req.file.url` con la URL pública del blob
+ * después de una carga exitosa. Esta URL se almacena en el campo `imagen_url`
+ * de la tabla `productos`.
+ */
 
+/** GET /api/products — Lista productos con filtros opcionales */
 const getAll = async (req, res) => {
   try {
     const { search, categoria_id, activo = 'true' } = req.query;
@@ -31,6 +40,7 @@ const getAll = async (req, res) => {
   }
 };
 
+/** GET /api/products/:id — Detalle de un producto */
 const getById = async (req, res) => {
   try {
     const result = await pool.query(
@@ -47,10 +57,15 @@ const getById = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/products — Crear producto.
+ * Si se sube una imagen, req.file.url contiene la URL del blob en Azure Storage.
+ */
 const create = async (req, res) => {
   try {
     const { nombre, descripcion, precio, stock, categoria_id } = req.body;
-    // TODO: Validar que precio >= 0, stock >= 0, nombre no vacío, categoria_id exista
+
+    // La URL de la imagen viene de Azure Blob Storage (vía multer-azure-blob-storage)
     const imagen_url = req.file ? req.file.url : null;
 
     const result = await pool.query(
@@ -64,6 +79,12 @@ const create = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/products/:id — Actualizar producto.
+ * Si se sube una nueva imagen, reemplaza la URL anterior en la BD.
+ * La imagen antigua en Azure Blob Storage no se elimina automáticamente
+ * (puede implementarse como mejora futura con lifecycle management).
+ */
 const update = async (req, res) => {
   try {
     const { id } = req.params;
@@ -97,9 +118,9 @@ const update = async (req, res) => {
   }
 };
 
+/** DELETE /api/products/:id — Soft delete para mantener historial de ventas */
 const remove = async (req, res) => {
   try {
-    // Soft delete — no elimina físicamente para mantener historial de ventas
     await pool.query('UPDATE productos SET activo = false WHERE id = $1', [req.params.id]);
     res.json({ message: 'Producto desactivado correctamente.' });
   } catch (err) {

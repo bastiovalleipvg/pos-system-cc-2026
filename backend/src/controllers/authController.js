@@ -4,14 +4,13 @@ const pool = require('../config/database');
 
 /**
  * POST /api/auth/login
- * TODO: Completar implementación de autenticación.
- * Actualmente devuelve un token de prueba sin verificar roles ni expiración real.
+ * Autentica al usuario por email/password, emite un JWT firmado y lo almacena
+ * en una cookie HttpOnly segura. El JWT incluye id, nombre, email y rol.
  */
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // TODO: Validar que email y password no estén vacíos
     if (!email || !password) {
       return res.status(400).json({ error: 'Email y contraseña son requeridos.' });
     }
@@ -66,11 +65,10 @@ const login = async (req, res) => {
 
 /**
  * GET /api/auth/me
- * TODO: Requiere que authMiddleware esté implementado correctamente.
+ * Retorna los datos del usuario autenticado (extraídos del JWT por authMiddleware).
  */
 const me = async (req, res) => {
   try {
-    // TODO: req.user viene de authMiddleware cuando esté implementado
     if (!req.user) {
       return res.status(401).json({ error: 'No autenticado.' });
     }

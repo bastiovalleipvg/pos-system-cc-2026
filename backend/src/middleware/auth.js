@@ -3,15 +3,13 @@ const jwt = require('jsonwebtoken');
 /**
  * Middleware de autenticación JWT.
  *
- * TODO: IMPLEMENTAR - Este middleware no verifica ningún token.
- * Actualmente todas las rutas protegidas son accesibles sin autenticación.
+ * Extrae el token JWT desde la cookie 'token' (HttpOnly) o desde el header
+ * Authorization (formato: "Bearer <token>"). Verifica su validez con
+ * jwt.verify() y decodifica el payload, inyectándolo en req.user.
  *
- * Pasos para implementar:
- * 1. Extraer el token del header Authorization (formato: "Bearer <token>")
- * 2. Verificar el token con jwt.verify() usando process.env.JWT_SECRET
- * 3. Agregar el usuario decodificado a req.user
- * 4. Retornar 401 si no hay token o 403 si el token es inválido/expirado
- * 5. Eliminar el llamado directo a next() al final de esta función
+ * Respuestas de error:
+ *   401 — No se proporcionó token.
+ *   403 — Token inválido o expirado.
  */
 const authMiddleware = (req, res, next) => {
   let token = null;
@@ -48,10 +46,10 @@ const authMiddleware = (req, res, next) => {
 /**
  * Middleware de autorización por rol.
  *
- * TODO: IMPLEMENTAR - Actualmente no verifica roles.
- * Requiere que authMiddleware esté implementado primero.
+ * Verifica que el usuario autenticado (req.user, inyectado por authMiddleware)
+ * posea uno de los roles especificados. Caso contrario, retorna 403.
  *
- * @param {string[]} roles - Roles permitidos (ej: ['admin'])
+ * @param {string[]} roles — Roles permitidos (ej: ['admin'])
  */
 const requireRole = (roles) => {
   return (req, res, next) => {

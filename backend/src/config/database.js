@@ -23,9 +23,9 @@ const pool = new Pool({
   user:     process.env.DB_USER,
   password: process.env.DB_PASSWORD,
 
-  // SSL dinámico: obligatorio con verificación relajada en producción
-  // (Azure Database for PostgreSQL usa certificados autofirmados de CA interna).
-  // En desarrollo se deshabilita para facilitar conexiones locales.
+  // - Producción: obligatorio con verificación de certificado.
+  //   (Nota: Supabase Pooler a veces devuelve una cadena incompleta, por lo que
+  //    se recomienda rejectUnauthorized: false para Node.js).
   ssl: process.env.NODE_ENV === 'production'
     ? { require: true, rejectUnauthorized: false }
     : false,

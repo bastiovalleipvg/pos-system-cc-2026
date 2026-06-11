@@ -4,7 +4,6 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const path = require("path");
 
 const authRoutes    = require('./routes/auth');
 const productRoutes  = require('./routes/products');
@@ -15,40 +14,47 @@ const reportRoutes   = require('./routes/reports');
 const userRoutes     = require('./routes/users');
 const evalRoutes     = require('./routes/eval');
 
+const pool       = require('./config/database');
 const logger     = require('./config/logger');
 const { httpLogger } = require('./middleware/httpLogger');
 const { globalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
-/* Para desarrollo local
-El valor por defecto de la whitelist es http://localhost:3000, así que no necesitas nada en .env para trabajar localmente.
-
-Para producción en Azure
-Solo debes añadir en las variables de entorno de tu App Service / Container App:
-
-FRONTEND_URL=https://tu-frontend.azurestaticapps.net */
-
 // ─── SEGURIDAD HTTP ──────────────────────────────────────────────────────────
-// 1. Helmet: asegura cabeceras HTTP (oculta que usas Express, previene XSS básico, etc.)
+// Helmet: asegura cabeceras HTTP (oculta X-Powered-By, previene XSS, clickjacking, etc.)
 app.use(helmet());
 
-// 2. CORS estricto: solo permite peticiones desde el frontend autorizado
-const whitelist = [
-  process.env.FRONTEND_URL || "http://localhost:3000",
-  // Añadir aquí la URL real de producción en Azure cuando esté disponible
-];
+// ─── CORS ESTRICTO ───────────────────────────────────────────────────────────
+// Whitelist de orígenes autorizados.
+//
+// En producción se define FRONTEND_URL con los orígenes permitidos separados por coma.
+// Incluye:
+//   - Dominio público de Cloudflare: https://cloudpos6.tech
+//   - FQDN interno de Azure Container Apps del frontend (pruebas de red)
+//
+// Ejemplo de variable en Azure Container App:
+//   FRONTEND_URL=https://cloudpos6.tech,https://app-frontend-core.ambitiouscliff-28478ba7.canadacentral.azurecontainerapps.io
+const whitelist = (process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map(url => url.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || whitelist.indexOf(origin) !== -1) {
+      // Permitir peticiones sin origin (health checks, server-side requests, curl)
+      if (!origin || whitelist.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("No permitido por CORS"));
+        logger.warn(`[CORS] Origen bloqueado: ${origin}`);
+        callback(new Error('No permitido por CORS'));
       }
     },
-    credentials: true, // Vital para enviar cookies HttpOnly en la Fase 2
+    credentials: true,                                    // Cookies HttpOnly cross-origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos explícitos
+    allowedHeaders: ['Content-Type', 'Authorization'],    // Cabeceras permitidas
+    maxAge: 86400,                                        // Pre-flight cache: 24 horas
   }),
 );
 
@@ -56,18 +62,41 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ─── LOGGING HTTP ───────────────────────────────────────────────────────────────────
+// ─── LOGGING HTTP ───────────────────────────────────────────────────────────
 // Registra cada request (método, URL, status, duración, IP) con Winston.
 app.use(httpLogger);
 
-// ─── ARCHIVOS ESTÁTICOS ────────────────────────────────────────────────────────
-// Eliminado: El backend ya no sirve imágenes locales, todas se obtienen directo de Azure Blob Storage
-
 // ─── HEALTH CHECK ────────────────────────────────────────────────────────────
-// Ruta pública y ligera — sin autenticación ni middleware pesado.
-// Usada por Azure App Service / Container Apps para liveness/readiness probes.
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+// Ruta pública y ligera — sin autenticación ni rate limiting.
+// Usada por Azure Container Apps para liveness/readiness probes.
+// Valida conectividad real con PostgreSQL y Redis antes de responder 200.
+app.get('/health', async (_req, res) => {
+  const checks = { status: 'ok', timestamp: new Date().toISOString() };
+
+  // Verificar conectividad con PostgreSQL (Supabase)
+  try {
+    const start = Date.now();
+    await pool.query('SELECT 1');
+    checks.database = { status: 'connected', latencyMs: Date.now() - start };
+  } catch (err) {
+    checks.status = 'degraded';
+    checks.database = { status: 'disconnected', error: err.message };
+    // BD es crítica — retornar 503 para que Container Apps marque la réplica como no saludable
+    return res.status(503).json(checks);
+  }
+
+  // Verificar conectividad con Redis (caché — degradación elegante)
+  try {
+    const redis = require('./config/redis');
+    const start = Date.now();
+    await redis.ping();
+    checks.redis = { status: 'connected', latencyMs: Date.now() - start };
+  } catch (err) {
+    // Redis es caché, no es crítico. La app funciona sin él (degradada).
+    checks.redis = { status: 'disconnected', error: err.message };
+  }
+
+  res.status(200).json(checks);
 });
 
 // ─── RUTAS ───────────────────────────────────────────────────────────────────
@@ -81,7 +110,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/eval", evalRoutes); // Ruta de evaluación docente (requiere EVAL_SECRET)
 
-// ─── MANEJO DE ERRORES GLOBAL ────────────────────────────────────────────────────────────
+// ─── MANEJO DE ERRORES GLOBAL ────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
   logger.error(err.message || 'Error interno del servidor', {
