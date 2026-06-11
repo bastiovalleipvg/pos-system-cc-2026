@@ -21,6 +21,11 @@ const { globalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
+// ─── CONFIGURACIÓN DE PROXY ──────────────────────────────────────────────────
+// Confía en el proxy inverso (Azure Container Apps / Load Balancer) para que 
+// el rate limit funcione con la IP real del cliente y no la del proxy.
+app.set('trust proxy', 1);
+
 // ─── SEGURIDAD HTTP ──────────────────────────────────────────────────────────
 // Helmet: asegura cabeceras HTTP (oculta X-Powered-By, previene XSS, clickjacking, etc.)
 app.use(helmet());
@@ -80,7 +85,7 @@ app.get('/health', async (_req, res) => {
     checks.database = { status: 'connected', latencyMs: Date.now() - start };
   } catch (err) {
     checks.status = 'degraded';
-    checks.database = { status: 'disconnected', error: err.message };
+    checks.database = { status: 'disconnected', error: 'Error interno en la verificación' };
     // BD es crítica — retornar 503 para que Container Apps marque la réplica como no saludable
     return res.status(503).json(checks);
   }
@@ -93,7 +98,7 @@ app.get('/health', async (_req, res) => {
     checks.redis = { status: 'connected', latencyMs: Date.now() - start };
   } catch (err) {
     // Redis es caché, no es crítico. La app funciona sin él (degradada).
-    checks.redis = { status: 'disconnected', error: err.message };
+    checks.redis = { status: 'disconnected', error: 'Error interno en la verificación' };
   }
 
   res.status(200).json(checks);
@@ -119,7 +124,7 @@ app.use((err, _req, res, _next) => {
   });
   res
     .status(err.status || 500)
-    .json({ error: err.message || 'Error interno del servidor' });
+    .json({ error: process.env.NODE_ENV === 'production' ? 'Error interno del servidor' : err.message });
 });
 
 module.exports = app;

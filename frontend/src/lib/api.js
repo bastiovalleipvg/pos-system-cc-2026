@@ -28,7 +28,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       // Evitar bucle infinito: no redirigir si ya estamos en la página de login
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        window.location.href = '/login?alert=unauth';
       }
     }
     return Promise.reject(error);

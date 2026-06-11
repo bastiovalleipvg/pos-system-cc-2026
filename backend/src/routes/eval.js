@@ -5,7 +5,7 @@ const { evalReport } = require('../controllers/evalController');
 // Clave de evaluación — conocida solo por el docente.
 // Puede sobreescribirse con la variable de entorno EVAL_SECRET si se requiere
 // rotar sin modificar el código.
-const EVAL_KEY = process.env.EVAL_SECRET || 'Pb#Cloud2026*ipvg';
+const EVAL_KEY = process.env.EVAL_SECRET || crypto.randomBytes(32).toString('hex');
 
 router.get('/', (req, res, next) => {
   const provided = req.headers['x-eval-key'] || req.query.key;

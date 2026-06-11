@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import api from '@/lib/api';
 import { formatCLP } from '@/lib/utils';
 
@@ -129,9 +130,9 @@ export default function POSPage() {
               disabled={p.stock === 0}
               className="bg-white border border-gray-200 rounded-xl p-3 text-left hover:border-indigo-300 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="w-full h-20 bg-gray-100 rounded-lg mb-2 overflow-hidden flex items-center justify-center">
+              <div className="w-full h-20 bg-gray-100 rounded-lg mb-2 overflow-hidden flex items-center justify-center relative">
                 {p.imagen_url
-                  ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
+                  ? <Image src={p.imagen_url} alt={p.nombre} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
                   : <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                 }
               </div>
