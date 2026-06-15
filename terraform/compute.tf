@@ -7,12 +7,18 @@ resource "azurerm_log_analytics_workspace" "law" {
 }
 
 resource "azurerm_container_app_environment" "cae" {
-  name                           = "cae-prod-core"
-  location                       = azurerm_resource_group.rg_apps.location
-  resource_group_name            = azurerm_resource_group.rg_apps.name
-  log_analytics_workspace_id     = azurerm_log_analytics_workspace.law.id
-  infrastructure_subnet_id       = azurerm_subnet.subnet_aca.id
+  name                       = "cae-prod-core"
+  location                   = azurerm_resource_group.rg_apps.location
+  resource_group_name        = azurerm_resource_group.rg_apps.name
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id
+  infrastructure_subnet_id   = azurerm_subnet.subnet_aca.id
   internal_load_balancer_enabled = true
+
+  lifecycle {
+    ignore_changes = [
+      infrastructure_resource_group_name
+    ]
+  }
 }
 
 resource "azurerm_container_app" "frontend" {

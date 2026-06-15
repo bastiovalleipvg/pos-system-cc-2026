@@ -51,6 +51,7 @@ resource "azurerm_subnet" "subnet_aca" {
   }
 }
 
+
 resource "azurerm_subnet" "subnet_postgres" {
   name                 = "subnet-postgres"
   resource_group_name  = azurerm_resource_group.rg_network.name
@@ -108,6 +109,8 @@ resource "azurerm_subnet_network_security_group_association" "nsg_aca_assoc" {
   subnet_id                 = azurerm_subnet.subnet_aca.id
   network_security_group_id = azurerm_network_security_group.nsg_aca.id
 }
+
+
 
 resource "azurerm_subnet_network_security_group_association" "nsg_postgres_assoc" {
   subnet_id                 = azurerm_subnet.subnet_postgres.id
