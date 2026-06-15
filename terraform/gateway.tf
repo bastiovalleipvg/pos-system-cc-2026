@@ -38,11 +38,17 @@ resource "azurerm_application_gateway" "agw" {
   name                = "agw-pos-prod"
   resource_group_name = azurerm_resource_group.rg_apps.name
   location            = azurerm_resource_group.rg_apps.location
+  zones               = ["1", "2", "3"]
 
   sku {
     name     = "WAF_v2"
     tier     = "WAF_v2"
     capacity = 1
+  }
+
+  ssl_policy {
+    policy_type = "Predefined"
+    policy_name = "AppGwSslPolicy20220101"
   }
 
   gateway_ip_configuration {
